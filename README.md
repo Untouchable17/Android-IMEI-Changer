@@ -1,12 +1,12 @@
 <h1 align="center">
-    <a href="https://github.com/Untouchable17/Android IMEI Changer">
+    <a href="https://github.com/Untouchable17/Android-IMEI-Changer">
         <img src="https://i.ibb.co/4g8FdtN/SOSI.png" width="700">
     </a>
 </h1>
 
 <p align="center">
-<a href="https://github.com/Untouchable17/Android IMEI Changer"><img src="https://img.shields.io/static/v1?label=version&message=1.0.0&color=green"></a>
-<a href="https://github.com/Untouchable17/Android IMEI Changer/issues?q=is:issue+is:closed"><img src="https://img.shields.io/github/issues-closed/Untouchable17/Android IMEI Changer?color=orange"></a>
+<a href="https://github.com/Untouchable17/Android-IMEI-Changer"><img src="https://img.shields.io/static/v1?label=version&message=1.0.0&color=green"></a>
+<a href="https://github.com/Untouchable17/Android-IMEI-Changer/issues?q=is:issue+is:closed"><img src="https://img.shields.io/github/issues-closed/Untouchable17/Android-IMEI-Changer?color=orange"></a>
 </p>
 
 <h1 align="center">Android IMEI Changer</h1>
