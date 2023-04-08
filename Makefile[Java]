@@ -1,0 +1,16 @@
+JAVAC=javac
+JAVA_SRCS=IMEI-AndroidChanger.java ImeiManager.java
+CLASSPATH=.:$ANDROID_HOME/platforms/android-11/android.jar
+
+.PHONY: all clean
+
+all: IMEI-AndroidChanger.class ImeiManager.class
+
+ImeiManager.class: ImeiManager.java
+	$(JAVAC) -cp $(CLASSPATH) $<
+
+IMEI-AndroidChanger.class: IMEI-AndroidChanger.java
+	$(JAVAC) -cp $(CLASSPATH) $<
+
+clean:
+	rm -f *.class
