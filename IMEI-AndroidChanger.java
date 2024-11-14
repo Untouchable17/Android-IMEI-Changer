@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-public class ImeiChanger {
+public class "Android-IMEI-Changer" {
     private static final Logger logger = Logger.getLogger(ImeiChanger.class.getName());
     private static final String LOG_FILE = "imei_change_log.txt";
 
