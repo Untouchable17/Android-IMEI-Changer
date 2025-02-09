@@ -5,7 +5,7 @@
 </h1>
 
 <p align="center">
-<a href="https://github.com/Untouchable17/Android-IMEI-Changer"><img src="https://img.shields.io/static/v1?label=version&message=4.0.0&color=green"></a>
+<a href="https://github.com/Untouchable17/Android-IMEI-Changer"><img src="https://img.shields.io/static/v1?label=version&message=7.0.0&color=green"></a>
 <a href="https://github.com/Untouchable17/Android-IMEI-Changer/issues?q=is:issue+is:closed"><img src="https://img.shields.io/github/issues-closed/Untouchable17/Android-IMEI-Changer?color=orange"></a>
 </p>
 
