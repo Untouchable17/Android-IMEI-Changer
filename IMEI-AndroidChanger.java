@@ -18,48 +18,55 @@ public class ImeiChanger {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-
         try {
             checkRootAccess();
-
-            List<String> imeisToChange = new ArrayList<>();
             boolean continueChanging = true;
-
             while (continueChanging) {
+                List<String> imeisToChange = new ArrayList<>();
+                System.out.println("Текущий IMEI: " + getCurrentImei());
                 System.out.print("Хотите ввести новый IMEI (введите '1') или сгенерировать случайный (введите '2')? ");
                 String choice = scanner.nextLine().trim();
-
                 if ("1".equals(choice)) {
                     String newImei = getInputImei(scanner);
                     if (newImei != null) {
                         imeisToChange.add(newImei);
+                        // Для dual-SIM спросить второй
+                        System.out.print("Введите IMEI для SIM2 (или оставьте пустым): ");
+                        String newImei2 = scanner.nextLine().trim();
+                        if (!newImei2.isEmpty() && isValidImei(newImei2)) {
+                            imeisToChange.add(newImei2);
+                        }
                     }
                 } else if ("2".equals(choice)) {
                     for (int i = 0; i < 2; i++) {
                         String randomImei = generateRandomImei();
                         imeisToChange.add(randomImei);
-                        System.out.println("Сгенерированный IMEI: " + randomImei);
+                        System.out.println("Сгенерированный IMEI для SIM" + (i+1) + ": " + randomImei);
                     }
                 } else {
                     System.err.println("Неверный выбор.");
-                    continue; // Повторить ввод
+                    continue;
                 }
-
-                for (String imei : imeisToChange) {
-                    if (changeImei(imei)) {
-                        logger.info("IMEI успешно изменен на: " + imei);
+                boolean success = true;
+                for (int i = 0; i < imeisToChange.size(); i++) {
+                    String imei = imeisToChange.get(i);
+                    int slot = (i == 0) ? 7 : 10; // 7 для SIM1, 10 для SIM2 в MTK
+                    if (changeImei(imei, slot)) {
+                        logger.info("IMEI успешно изменен на: " + imei + " (слот " + (i+1) + ")");
                         logChange(imei);
-                        System.out.println("IMEI успешно изменен на: " + imei);
+                        System.out.println("IMEI успешно изменен на: " + imei + " (слот " + (i+1) + ")");
                     } else {
                         System.err.println("Не удалось изменить IMEI: " + imei);
+                        success = false;
                     }
                 }
-
+                if (success) {
+                    System.out.println("Перезагрузите устройство для применения изменений.");
+                }
                 System.out.print("Хотите изменить еще один IMEI? (да/нет): ");
                 String response = scanner.nextLine().trim();
                 continueChanging = response.equalsIgnoreCase("да");
             }
-
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Произошла ошибка: ", e);
         } finally {
@@ -68,59 +75,64 @@ public class ImeiChanger {
     }
 
     private static void checkRootAccess() throws Exception {
-        executeCommand("id");
+        if (!executeCommand("id").contains("uid=0")) {
+            throw new Exception("Root-доступ не найден.");
+        }
     }
 
-    private static boolean changeImei(String imei) throws Exception {
-        String command = String.format("service call iphonesubinfo 1 s16 %s", imei);
+    private static boolean changeImei(String imei, int slot) {
+        String command = String.format("echo 'AT +EGMR=1,%d,\"%s\"' > /dev/radio/pttycmd1", slot, imei);
         return executeCommand(command);
     }
 
-    private static boolean executeCommand(String command) {
+    private static String executeCommand(String command) {
         try {
             ProcessBuilder pb = new ProcessBuilder("su", "-c", command);
             Process process = pb.start();
             int exitCode = process.waitFor();
-            return exitCode == 0;
+            if (exitCode != 0) {
+                BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                String error = errorReader.readLine();
+                logger.severe("Ошибка: " + error);
+            }
+            return exitCode == 0 ? "Success" : null;
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Ошибка при выполнении команды: ", e);
-            return false;
+            return null;
         }
     }
 
+    private static String getCurrentImei() {
+        String result = executeCommand("service call iphonesubinfo 1 | awk -F \"'\" '{print $2}' | sed '1 d' | tr -d '.' | awk '{print}' ORS=");
+        return result != null ? result : "Не удалось прочитать";
+    }
+
     private static boolean isValidImei(String imei) {
-        return Pattern.matches("^[0-9]{15}$", imei);
+        return Pattern.matches("^[0-9]{15}$", imei) && calculateLuhnDigit(imei.substring(0, 14)) == imei.charAt(14);
     }
 
     private static String generateRandomImei() {
         Random random = new Random();
         StringBuilder sb = new StringBuilder();
-
         for (int i = 0; i < 14; i++) {
             sb.append(random.nextInt(10));
         }
-
         sb.append(calculateLuhnDigit(sb.toString()));
-
         return sb.toString();
     }
 
     private static char calculateLuhnDigit(String imeiWithoutCheckDigit) {
         int sum = 0;
         boolean alternate = false;
-
         for (int i = imeiWithoutCheckDigit.length() - 1; i >= 0; i--) {
             int n = Integer.parseInt(imeiWithoutCheckDigit.substring(i, i + 1));
-
             if (alternate) {
                 n *= 2;
                 if (n > 9) n -= 9;
             }
-
             sum += n;
             alternate = !alternate;
         }
-
         int checkDigit = (10 - (sum % 10)) % 10;
         return Character.forDigit(checkDigit, 10);
     }
@@ -137,11 +149,10 @@ public class ImeiChanger {
     private static String getInputImei(Scanner scanner) {
         System.out.print("Введите новый IMEI: ");
         String newImei = scanner.nextLine().trim();
-        
         if (isValidImei(newImei)) {
             return newImei;
         } else {
-            System.err.println("Некорректный формат IMEI.");
+            System.err.println("Некорректный формат IMEI (15 цифр с валидным Luhn).");
             return null;
         }
     }
