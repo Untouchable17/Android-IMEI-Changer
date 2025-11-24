@@ -126,5 +126,7 @@ Always prioritize legal compliance and consider alternatives like official IMEI 
 
 <h2 align="center">Contact the Developer</h2>
 
+```
 - Group & Contact: t.me/initial_persistence
 - Email: tylerblackout17@gmail.com
+```
